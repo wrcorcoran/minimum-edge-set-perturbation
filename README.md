@@ -1,4 +1,4 @@
-# minimum-edge-set-perturbation
+# Minimum Edge Set Perturbation Problem (MESP)
 
 Currently, there are three main research heuristics:
 - Homophily
