@@ -99,6 +99,10 @@ For example, given $c = 0.1$, if a node $u$ has $23$ homophilic edges then $2$ r
   - Can we selectively pair nodes with higher (or lower) homophilic degrees? What threshold would emerge to cause no change?
   - This seems to show a general trend of edges added increasing change in accuracy. However, it's possible that this isn't always true. 
 
+##### Very interesting Results! [MISTAKENLY DROPPED HOMOPHILIC ASPECT]
+- I did an entire experiment before realizing that I'd dropped the homophilic aspect of the experiment. I will pass these results to Niyati for her findings.
+- Will add basic results to research log.
+
 #### Possible Ideas:
 - Is there some pattern which would not change the value? Some geometric pattern?
 - Can we increase the number of similar nodes by some threshold?
