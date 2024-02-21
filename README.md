@@ -10,9 +10,6 @@ See their findings here:
 - [Degree](https://github.com/wrcorcoran/minimum-edge-set-perturbation/blob/main/degree/experiments/FINDINGS.md)
 - [Common Neighbors](https://github.com/wrcorcoran/minimum-edge-set-perturbation/blob/main/common-neighbors/experiments/FINDINGS.md)
 
-Note on INSTALL:
-First, there are errors with GLIBC. To fix, do the following:
-```conda remove dgl && conda install -c dglteam dgl```
 <!-- ```
 NAVIGATE TO YOUR HOME DIRECTORY USING TERMINAL
 
