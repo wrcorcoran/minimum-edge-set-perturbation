@@ -1,1 +1,5 @@
-CORA/mesp
+slurm-*.out
+*.info
+*.job
+**/.ipynb_checkpoints/
+**/__pycache__/
