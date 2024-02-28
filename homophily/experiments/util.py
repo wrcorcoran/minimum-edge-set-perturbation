@@ -20,6 +20,7 @@ from torch_geometric.utils import to_networkx, from_networkx
 import networkx as nx
 import numpy as np
 import random, math
+import matplotlib.pyplot as plt
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -79,7 +80,7 @@ def test_model(model, d):
 def output_accuracy_change(gt, cv):
     print("\n----")
     if gt != cv:
-        print(f'The accuracy has changed by {gt - cv:.4f}')
+        print(f'The accuracy has changed by {cv - gt:.4f}')
     else:
         print("The accuracy has not changed.")
 
@@ -104,6 +105,9 @@ def convert_to_pyg(G, x, y, train_mask, test_mask):
     return d
 
 def add_edge(g, i, j, undirected):
+    if g.has_edge(i, j):
+        return;
+    
     if undirected:
         g.add_edge(i, j)
         g.add_edge(j, i)
@@ -114,7 +118,32 @@ def get_ground_truth(model, data):
     return test_model(model, data)
 
 def number_added_edges(init, final, is_undirected):
+    change = final - init
+
     if is_undirected:
-        print("Change in edges: ", (final - init)/2)    
+        percentage_change = (change / init) * 100 if init != 0 else 0
+        print("Change in edges: ", change / 2, " | Percentage change: {:.2f}%".format(percentage_change))
     else:
-        print("Change in edges: ", (final - init))
+        percentage_change = (change / init) * 100 if init != 0 else 0
+        print("Change in edges: ", change, " | Percentage change: {:.2f}%".format(percentage_change))
+
+
+def print_graph(G):
+    plt.figure(figsize=(10, 8))
+    pos = nx.spring_layout(G)
+    
+    nx.draw_networkx_nodes(G, pos, node_size=10)
+    
+    nx.draw_networkx_edges(G, pos, alpha=0.5)
+    
+    plt.title("Large Graph Visualization")
+    plt.xticks([])
+    plt.yticks([])
+    plt.show()
+
+
+def make_clique(G, s):
+    s = list(s)
+    for i in range(0, len(s)):
+        for j in range(i + 1, len(s)):
+            add_edge(G, s[i], s[j], undirected=True)
