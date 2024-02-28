@@ -1,6 +1,10 @@
 # Findings Regarding Homophily
+### Ideas:
+- Are there any characteristics of a homophilic *class*? Like, can I add more edges to a highly homophilic class or is it generally impacted by the homophily of the nodes?
+    - [Characterizing Graph Datasets for Node Classification: Homophily–Heterophily Dichotomy and Beyond](https://arxiv.org/pdf/2209.06177.pdf)
+    - [IS HOMOPHILY A NECESSITY FOR GRAPH NEURAL NETWORKS?](https://arxiv.org/pdf/2106.06134.pdf)
 
-### Week 5
+### Week 6
 ##### What happens if all edges in a class are connected to a single node?
 - On the CORA dataset, there was a change $0.0020$ from the ground truth.
 - How was this implemented?
