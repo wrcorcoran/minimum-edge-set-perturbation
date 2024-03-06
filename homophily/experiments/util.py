@@ -172,3 +172,13 @@ def get_node_homophily_rates(G, n, y, num_classes):
         vals[v] = vals[v]/len(edges)
     
     return vals
+
+def isSatisfied(n, c, dict, val):
+    # print("satisfied", math.floor(dict[n][0][c] * (1 + val)) - dict[n][1][c])
+    return not math.floor(dict[n][0][c] * (1 + val)) - dict[n][1][c] > 0
+
+def getClassConnectivity(G, n, y, num_classes):
+    dict = {i: 0 for i in range(0, num_classes)}
+    for neighbor in G.adj[n]:
+        dict[y[neighbor].item()] += 1
+    return dict
