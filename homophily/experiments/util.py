@@ -69,13 +69,17 @@ def get_model(in_feats, h_feats, num_classes, name):
 
     return model
 
-def test_model(model, d):
+def test_model(model, d, testMask=False):
     model.eval()
     out = model(d)
     pred = out.argmax(dim=1)
-    
-    acc = (pred[d.test_mask] == d.y[d.test_mask]).sum().item() / d.test_mask.sum().item()
-    return acc
+
+    if (testMask):
+        acc = (pred[d.test_mask] == d.y[d.test_mask]).sum().item() / d.test_mask.sum().item()
+        return acc
+    else:
+        acc = (pred == d.y).sum().item() / len(d.y)
+        return acc
 
 def output_accuracy_change(gt, cv):
     print("\n----")
@@ -114,8 +118,8 @@ def add_edge(g, i, j, undirected):
     else:
         g.add_edge(i, j)
 
-def get_ground_truth(model, data):
-    return test_model(model, data)
+def get_ground_truth(model, data, testMask):
+    return test_model(model, data, testMask)
 
 def number_added_edges(init, final, is_undirected):
     change = final - init
@@ -161,8 +165,18 @@ def get_total_homophily(data):
             num_edges += 1
 
     return same / num_edges
+
+def get_node_homophily(G, n, y, c):
+    edges = G.out_edges(n)
+    val = 0
     
-def get_node_homophily_rates(G, n, y, num_classes):
+    for edge in edges:
+        if y[edge[1]].item() == c:
+            val += 1
+            
+    return val / len(edges)
+
+def get_node_homophily_across_classes(G, n, y, num_classes):
     edges = G.out_edges(n)
     vals = {key: 0 for key in range(num_classes)}
     for edge in edges:
