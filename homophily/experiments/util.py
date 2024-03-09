@@ -136,9 +136,9 @@ def print_graph(G):
     plt.figure(figsize=(10, 8))
     pos = nx.spring_layout(G)
     
-    nx.draw_networkx_nodes(G, pos, node_size=10)
+    nx.draw_networkx_nodes(G, pos, node_size=1)
     
-    nx.draw_networkx_edges(G, pos, alpha=0.5)
+    nx.draw_networkx_edges(G, pos, alpha=0.05)
     
     plt.title("Large Graph Visualization")
     plt.xticks([])
