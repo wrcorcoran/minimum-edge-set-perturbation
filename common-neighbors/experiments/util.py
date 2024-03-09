@@ -61,10 +61,10 @@ class GCN(nn.Module):
         h = self.conv2(h, edge_index)
         return h
 
-def get_model(in_feats, h_feats, num_classes):
+def get_model(in_feats, h_feats, num_classes, name):
     model = GCN(in_feats, h_feats, num_classes)
     model = model.to(device)
-    model.load_state_dict(torch.load("../model/cora_gt.pt"))
+    model.load_state_dict(torch.load(f'../../model/{name}_gt.pt'))
     model.eval()
 
     return model
@@ -147,3 +147,38 @@ def make_clique(G, s):
     for i in range(0, len(s)):
         for j in range(i + 1, len(s)):
             add_edge(G, s[i], s[j], undirected=True)
+
+def get_total_homophily(data):
+    G, x, y, train_mask, test_mask = convert_to_networkx(data)
+    same = 0
+    num_edges = 0
+    
+    for i in range(0, G.number_of_nodes()):
+        edges = G.out_edges(i)
+        for e in edges:
+            if y[e[0]] == y[e[1]]:
+                same += 1
+            num_edges += 1
+
+    return same / num_edges
+    
+def get_node_homophily_rates(G, n, y, num_classes):
+    edges = G.out_edges(n)
+    vals = {key: 0 for key in range(num_classes)}
+    for edge in edges:
+        vals[y[edge[1]].item()] += 1
+        
+    for v in vals.keys():
+        vals[v] = vals[v]/len(edges)
+    
+    return vals
+
+def isSatisfied(n, c, dict, val):
+    # print("satisfied", math.floor(dict[n][0][c] * (1 + val)) - dict[n][1][c])
+    return not math.floor(dict[n][0][c] * (1 + val)) - dict[n][1][c] > 0
+
+def getClassConnectivity(G, n, y, num_classes):
+    dict = {i: 0 for i in range(0, num_classes)}
+    for neighbor in G.adj[n]:
+        dict[y[neighbor].item()] += 1
+    return dict

@@ -141,6 +141,7 @@ Here are my findings so far in Week 8.
 - For context, groundtruth in this model is $0.749$.
     - I had a few new driving questions/ideas that I wanted to explore:
     - **What happens if we turn a connected component, limited to a certain class, into a clique?**
+      - **Clarification:** Using the original graph, what happens if we turn a connected component, where *all* of the nodes are from the same class, into a clique?
       - Due to the small size of the CORA dataset, there are few connected components with size $> 1$ that reside in a single class. $2$ to be exact. While the accuracy was not changed, only $3$ edges were added, leaving this experiment relatively uninsightful.
         ```
         data = dataset.get_data()[0]
@@ -165,6 +166,7 @@ Here are my findings so far in Week 8.
         number_added_edges(init_edges, final_edges, is_undirected=True)
         ```
     - **What happens if we turn a connected component, limited to a certain class, with a certain density into a clique?**
+      - **Clarification:** Using the original graph, what happens if we turn a connected component with a certain density, where *all* of the nodes are from the same class, into a clique?
       - Similar to the above example, the CORA dataset is too limited. No nodes were changed.
         ```
         data = dataset.get_data()[0]
@@ -189,6 +191,7 @@ Here are my findings so far in Week 8.
         number_added_edges(init_edges, final_edges, is_undirected=True)
         ```
     - **What happens if we turn a connected component, when considering ONLY edges in a certain class, into a clique?**
+      - **Clarification:** After building a subgraph for each class, what happens if we turn a connected component, in that subgraph, into a clique?
       - This is where things start to get interesting.
       - First, I made a subgraph specific to the class, and then ran a connected components algorithm on it.
       - Upon cliquing an entire connected component, $4211$ edges are added, an increase of $79.78\%$.
@@ -216,7 +219,8 @@ Here are my findings so far in Week 8.
         output_accuracy_change(ground_truth, test_model(model, modified_graph)) 
         number_added_edges(init_edges, final_edges, is_undirected=True)
         ```
-    - **What happens if we turn a connected component with a certain density *c*, when considering ONLY edges in a certain class, into a clique?**
+    - **What happens if we turn a connected component with a certain density *c*, when considering ONLY edges in a certain class, into a clique?** 
+      - **Clarification:** After building a subgraph for each class, what happens if we turn a connected component with a certain density, in that subgraph, into a clique?
       - Again, I made subgraphs respective to the class.
       - For density threshold $c$, I tested all multiples of $0.05$ from $0.05$ to $0.75$. The results are as follows:
 
@@ -265,6 +269,7 @@ Here are my findings so far in Week 8.
             print("For c value:", c)
         ```
     - **What happens if we increase the density of a connected component, when considering ONLY edges in a certain class, by a certain threshold?**
+      - **Clarification:** After building a subgraph for each class, what happens if we increase the density of a connected component, in that subgraph, by some constant $c$?
       - For the density increase constant, $c$, I tested: $1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55,$$1.6, 1.65, 1.70, 1.75, 1.80, 1.85, 1.9, 1.95, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100$
       - The results are as follows:
           | Value of C | Change in Edges | Change in Accuracy |
@@ -359,3 +364,18 @@ Here are my findings so far in Week 8.
         output_accuracy_change(ground_truth, test_model(model, modified_graph)) 
         number_added_edges(init_edges, final_edges, is_undirected=True)
         ```
+#### Other Datasets:
+| PubMed Homophily | CORA Homophily | CiteSeer Homophily |
+|:------------:|:-------------------:|:-------------------:|
+| 0.802      | 0.810              | 0.734                |
+
+Was there any data that didn't corroborate the previous experiments with the CORA datasets?
+
+**PubMed**:
+- The problem with PubMed was nodes seemed to generally have *less* edges. Therefore, while the results were the same, it took higher thresholds to achieve them. 
+  - In other words: the results were similar when compared to the \# of edges added instead of any constant $c$.
+- Again, with most connected components, they were of size $1$ or $2$, which led to little change. However, the results were the same once PubMed added more edges (with higher constants).
+- 
+**CiteSeer**: 
+- Similar to PubMed, the results seemed to be similar in regards to \# of edges added, rather than any constants. 
+- CiteSeer did exhibit slight more extreme results, but this could be because the model didn't train as deeply. The results weren't alarmingly worse (less than $0.01$ for each). I'd like to train the model to a higher accuracy (currently, it's at 54\%) and see if that effects anything. But, I have trained the current model we have been using to convergence.
