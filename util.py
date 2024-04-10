@@ -15,14 +15,23 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.datasets import Planetoid
-from torch_geometric.nn import GCNConv
+from torch_geometric.nn import GCNConv, GATConv
 from torch_geometric.utils import to_networkx, from_networkx
 import networkx as nx
 import numpy as np
 import random, math
 import matplotlib.pyplot as plt
+from enum import Enum, auto
+import os
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+class Models(Enum):
+    GCN = auto()
+    GSAGE = auto()
+    GSAINT = auto()
+    GAT = auto()
+    GCNJACCARD = auto()
 
 class Dataset:
     def __init__(self, root='/tmp/Cora', name='Cora', device='cuda'):
@@ -61,13 +70,68 @@ class GCN(nn.Module):
         h = self.conv2(h, edge_index)
         return h
 
-def get_model(in_feats, h_feats, num_classes, name):
-    model = GCN(in_feats, h_feats, num_classes)
-    model = model.to(device)
-    model.load_state_dict(torch.load(f'../model/{name}_gt.pt'))
-    model.eval()
+class GAT(nn.Module):
+    def __init__(self, in_channels, hidden_channels, out_channels, heads):
+        super(GAT, self).__init__()
+        self.conv1 = GATConv(in_channels, hidden_channels, heads, dropout=0.6)
+        self.conv2 = GATConv(hidden_channels * heads, out_channels, heads=1, concat=False, dropout=0.6)
 
-    return model
+    def forward(self, data):
+        h, edge_index = data.x, data.edge_index
+
+        h = F.dropout(h, p=0.6, training=self.training)
+        h = F.elu(self.conv1(h, edge_index))
+        h = F.dropout(h, p=0.6, training=self.training)
+        h = self.conv2(h, edge_index)
+
+        return h
+
+def get_model(in_feats, h_feats, num_classes, dataset_name, kind):
+    if kind == Models.GCN:
+        model = GCN(in_feats, h_feats, num_classes)
+        model = model.to(device)
+        model.load_state_dict(torch.load(f'../../../models/gcn/{dataset_name}/{dataset_name}_gcn.pt'))
+        model.eval()
+
+        return model
+
+    if kind == Models.GAT:
+        heads = 8
+        model = GAT(in_feats, h_feats, num_classes, heads)
+        model = model.to(device)
+        model.load_state_dict(torch.load(f'../../../models/gat/{dataset_name}/{dataset_name}_gat.pt'))
+        model.eval()
+
+        return model
+
+    if kind == Models.GSAGE:
+        # heads = 8
+        # model = GAT(in_feats, h_feats, num_classes, heads)
+        # model = model.to(device)
+        # model.load_state_dict(torch.load(f'./models/gat/{dataset_name}_gat.pt'))
+        # model.eval()
+
+        return model
+
+    if kind == Models.GSAINT:
+        # heads = 8
+        # model = GAT(in_feats, h_feats, num_classes, heads)
+        # model = model.to(device)
+        # model.load_state_dict(torch.load(f'./models/gat/{dataset_name}_gat.pt'))
+        # model.eval()
+
+        return model
+
+    if kind == Models.GCNJACCARD:
+        # heads = 8
+        # model = GAT(in_feats, h_feats, num_classes, heads)
+        # model = model.to(device)
+        # model.load_state_dict(torch.load(f'./models/gat/{dataset_name}_gat.pt'))
+        # model.eval()
+
+        return model
+    
+    raise ValueError("Not valid model type")
 
 def test_model(model, d, testMask=False):
     model.eval()
