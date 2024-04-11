@@ -15,8 +15,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.datasets import Planetoid
-from torch_geometric.nn import GCNConv, GATConv
+from torch_geometric.nn import GCNConv, GATConv, GraphConv
 from torch_geometric.utils import to_networkx, from_networkx
+from deeprobust.graph.defense import GCNJaccard
+from deeprobust.graph.data import Dataset as DRDataset
+from torch_geometric.nn import GraphSAGE
+from torch_geometric.loader import LinkNeighborLoader
+from sklearn.linear_model import LogisticRegression
 import networkx as nx
 import numpy as np
 import random, math
@@ -86,7 +91,35 @@ class GAT(nn.Module):
 
         return h
 
-def get_model(in_feats, h_feats, num_classes, dataset_name, kind):
+class GSAINT(torch.nn.Module):
+    def __init__(self, dataset, hidden_channels):
+        super().__init__()
+        data, in_feats, h_feats, num_classes = dataset.get_data()
+        
+        in_channels = in_feats
+        out_channels = num_classes
+        self.conv1 = GraphConv(in_channels, hidden_channels)
+        self.conv2 = GraphConv(hidden_channels, hidden_channels)
+        self.conv3 = GraphConv(hidden_channels, hidden_channels)
+        self.lin = torch.nn.Linear(3 * hidden_channels, out_channels)
+
+    def set_aggr(self, aggr):
+        self.conv1.aggr = aggr
+        self.conv2.aggr = aggr
+        self.conv3.aggr = aggr
+
+    def forward(self, x0, edge_index, edge_weight=None):
+        x1 = F.relu(self.conv1(x0, edge_index, edge_weight))
+        x1 = F.dropout(x1, p=0.2, training=self.training)
+        x2 = F.relu(self.conv2(x1, edge_index, edge_weight))
+        x2 = F.dropout(x2, p=0.2, training=self.training)
+        x3 = F.relu(self.conv3(x2, edge_index, edge_weight))
+        x3 = F.dropout(x3, p=0.2, training=self.training)
+        x = torch.cat([x1, x2, x3], dim=-1)
+        x = self.lin(x)
+        return x.log_softmax(dim=-1)
+
+def get_model(in_feats, h_feats, num_classes, dataset_name, kind, data=None):
     if kind == Models.GCN:
         model = GCN(in_feats, h_feats, num_classes)
         model = model.to(device)
@@ -105,37 +138,81 @@ def get_model(in_feats, h_feats, num_classes, dataset_name, kind):
         return model
 
     if kind == Models.GSAGE:
-        # heads = 8
-        # model = GAT(in_feats, h_feats, num_classes, heads)
-        # model = model.to(device)
-        # model.load_state_dict(torch.load(f'./models/gat/{dataset_name}_gat.pt'))
-        # model.eval()
+        heads = 8
+        model = GraphSAGE(
+            in_feats,
+            h_feats,
+            num_layers=2,
+        ).to(device)
+        model.load_state_dict(torch.load(f'../../../models/gsage/{dataset_name}/{dataset_name}_gsage.pt'))
+        model = model.to(device)
+        model.eval()
 
         return model
 
     if kind == Models.GSAINT:
+        model = GSAINT(data, hidden_channels=64).to(device)
         # heads = 8
         # model = GAT(in_feats, h_feats, num_classes, heads)
         # model = model.to(device)
-        # model.load_state_dict(torch.load(f'./models/gat/{dataset_name}_gat.pt'))
-        # model.eval()
+        model.load_state_dict(torch.load(f'../../../models/gsaint/{dataset_name}/{dataset_name}_gsaint.pt'))
+        model.eval()
 
         return model
 
     if kind == Models.GCNJACCARD:
-        # heads = 8
-        # model = GAT(in_feats, h_feats, num_classes, heads)
+        data = DRDataset(root='/tmp/', name=dataset_name)
+        adj, features, labels = data.adj, data.features, data.labels
+        idx_train, idx_val, idx_test = data.idx_train, data.idx_val, data.idx_test
+        
+        model = GCNJaccard(nfeat=in_feats, nclass=num_classes,
+                nhid=h_feats, device=device)
+
+        model.fit(features, data.adj, labels, idx_train, idx_val, threshold=0.01, verbose=False)
+        model.eval()
+        # model = GCNJaccard(nfeat=in_feats, nclass=num_classes,
+        #         nhid=h_feats, device=device)
         # model = model.to(device)
-        # model.load_state_dict(torch.load(f'./models/gat/{dataset_name}_gat.pt'))
+        
+        # model.load(torch.load(f'../../../models/gcnjaccard/{dataset_name}/{dataset_name}_gcn_jaccard.pt'))
         # model.eval()
 
         return model
     
     raise ValueError("Not valid model type")
 
-def test_model(model, d, testMask=False):
+@torch.no_grad()
+def test_model(model, d, GCNtype, testMask=False):
     model.eval()
-    out = model(d)
+    if (GCNtype == Models.GCNJACCARD):
+        out = model.test(d)
+        return out
+    elif (GCNtype == Models.GSAGE):
+        data = d.to(device, 'x', 'edge_index')
+        
+        model.eval()
+        out = model(data.x, data.edge_index).cpu()
+    
+        clf = LogisticRegression()
+        clf.fit(out[data.train_mask], data.y[data.train_mask])
+    
+        test_acc = clf.score(out[data.test_mask], data.y[data.test_mask])
+
+        return test_acc
+    elif (GCNtype == Models.GSAINT):
+        model.eval()
+        model.set_aggr('mean')
+    
+        out = model(d.x.to(device), d.edge_index.to(device))
+        pred = out.argmax(dim=-1)
+        correct = pred.eq(d.y.to(device))
+    
+        accs = []
+        for _, mask in d('test_mask'):
+            accs.append(correct[mask].sum().item() / mask.sum().item())
+        return accs[0]
+    else:
+        out = model(d)
     pred = out.argmax(dim=1)
 
     if (testMask):
@@ -182,8 +259,8 @@ def add_edge(g, i, j, undirected):
     else:
         g.add_edge(i, j)
 
-def get_ground_truth(model, data, testMask):
-    return test_model(model, data, testMask)
+def get_ground_truth(model, data, GNNtype, testMask):
+    return test_model(model, data, GNNtype, testMask)
 
 def number_added_edges(init, final, is_undirected):
     change = final - init
