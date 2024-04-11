@@ -119,11 +119,11 @@ class GSAINT(torch.nn.Module):
         x = self.lin(x)
         return x.log_softmax(dim=-1)
 
-def get_model(in_feats, h_feats, num_classes, dataset_name, kind, data=None):
+def get_model(path, in_feats, h_feats, num_classes, dataset_name, kind, data=None):
     if kind == Models.GCN:
         model = GCN(in_feats, h_feats, num_classes)
         model = model.to(device)
-        model.load_state_dict(torch.load(f'../../../models/gcn/{dataset_name}/{dataset_name}_gcn.pt'))
+        model.load_state_dict(torch.load(f'{path}models/gcn/{dataset_name}/{dataset_name}_gcn.pt'))
         model.eval()
 
         return model
@@ -132,7 +132,7 @@ def get_model(in_feats, h_feats, num_classes, dataset_name, kind, data=None):
         heads = 8
         model = GAT(in_feats, h_feats, num_classes, heads)
         model = model.to(device)
-        model.load_state_dict(torch.load(f'../../../models/gat/{dataset_name}/{dataset_name}_gat.pt'))
+        model.load_state_dict(torch.load(f'{path}models/gat/{dataset_name}/{dataset_name}_gat.pt'))
         model.eval()
 
         return model
@@ -144,7 +144,7 @@ def get_model(in_feats, h_feats, num_classes, dataset_name, kind, data=None):
             h_feats,
             num_layers=2,
         ).to(device)
-        model.load_state_dict(torch.load(f'../../../models/gsage/{dataset_name}/{dataset_name}_gsage.pt'))
+        model.load_state_dict(torch.load(f'{path}models/gsage/{dataset_name}/{dataset_name}_gsage.pt'))
         model = model.to(device)
         model.eval()
 
@@ -155,7 +155,7 @@ def get_model(in_feats, h_feats, num_classes, dataset_name, kind, data=None):
         # heads = 8
         # model = GAT(in_feats, h_feats, num_classes, heads)
         # model = model.to(device)
-        model.load_state_dict(torch.load(f'../../../models/gsaint/{dataset_name}/{dataset_name}_gsaint.pt'))
+        model.load_state_dict(torch.load(f'{path}models/gsaint/{dataset_name}/{dataset_name}_gsaint.pt'))
         model.eval()
 
         return model
