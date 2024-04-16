@@ -19,6 +19,7 @@ from torch_geometric.nn import GCNConv, GATConv, GraphConv
 from torch_geometric.utils import to_networkx, from_networkx
 from deeprobust.graph.defense import GCNJaccard
 from deeprobust.graph.data import Dataset as DRDataset
+from deeprobust.graph.data import Pyg2Dpr
 from torch_geometric.nn import GraphSAGE
 from torch_geometric.loader import LinkNeighborLoader
 from sklearn.linear_model import LogisticRegression
@@ -161,7 +162,8 @@ def get_model(path, in_feats, h_feats, num_classes, dataset_name, kind, data=Non
         return model
 
     if kind == Models.GCNJACCARD:
-        data = DRDataset(root='/tmp/', name=dataset_name)
+        data = Pyg2Dpr(Planetoid(root='/tmp/', name=dataset_name))
+        # data = DRDataset(root='/tmp/', name=dataset_name)
         adj, features, labels = data.adj, data.features, data.labels
         idx_train, idx_val, idx_test = data.idx_train, data.idx_val, data.idx_test
         
@@ -192,11 +194,11 @@ def test_model(model, d, GCNtype, testMask=False):
         
         model.eval()
         out = model(data.x, data.edge_index).cpu()
-    
+        
         clf = LogisticRegression()
-        clf.fit(out[data.train_mask], data.y[data.train_mask])
+        clf.fit(out[data.train_mask].cpu(), data.y[data.train_mask].cpu())
     
-        test_acc = clf.score(out[data.test_mask], data.y[data.test_mask])
+        test_acc = clf.score(out[data.test_mask].cpu(), data.y[data.test_mask].cpu())
 
         return test_acc
     elif (GCNtype == Models.GSAINT):
