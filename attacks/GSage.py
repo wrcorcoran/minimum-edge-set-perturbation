@@ -12,8 +12,8 @@ from torch.nn.modules.module import Module
 from deeprobust.graph import utils
 from copy import deepcopy
 from torch_geometric.nn import GraphSAGE, SAGEConv
-from torch_geometric.loader import NeighborLoader
-from deeprobust.graph.data import Dpr2Pyg, Pyg2Dpr
+from torch_geometric.loader import LinkNeighborLoader
+from deeprobust.graph.data import Dpr2Pyg, Pyg2Dpr, Dataset
 
 def accuracy(pred_y, y):
     """Calculate accuracy."""
@@ -118,13 +118,18 @@ class GSAGE(nn.Module):
             self.initialize()
 
         self.data = pyg_data[0].to(self.device)
+        data_copy = deepcopy(self.data).to('cpu')
 
-        self.train_loader = NeighborLoader(
-            self.data,
-            num_neighbors=[5, 10],
-            batch_size=16,
-            input_nodes=self.data.train_mask,
+        self.train_loader = LinkNeighborLoader(
+            data_copy,
+            num_neighbors=[10, 10],
+            batch_size=256,
+            shuffle=True,
+            neg_sampling_ratio=1.0,
         )
+
+        # for batch in self.train_loader:
+        #     print(batch)
 
         # By default, it is trained with early stopping on validation
         self.train_with_early_stopping(train_iters, patience, verbose)
@@ -134,12 +139,12 @@ class GSAGE(nn.Module):
         """
         if verbose:
             print('=== training GSAGE model ===')
-  
+        
         criterion = torch.nn.CrossEntropyLoss()
         optimizer = self.optimizer
-
+        
         self.train()
-
+        
         labels = self.data.y
         train_mask, val_mask = self.data.train_mask, self.data.val_mask
 
@@ -153,6 +158,7 @@ class GSAGE(nn.Module):
           val_acc = 0
           
           for batch in self.train_loader:
+            batch = batch.to(self.device)
             # self.train()
             optimizer.zero_grad()
 
@@ -233,17 +239,20 @@ class GSAGE(nn.Module):
 
 
 # if __name__ == "__main__":
-    # from deeprobust.graph.data import Dataset, Dpr2Pyg
-    # # from deeprobust.graph.defense import GAT
-    # data = Dataset(root='/tmp/', name='cora')
-    # adj, features, labels = data.adj, data.features, data.labels
-    # idx_train, idx_val, idx_test = data.idx_train, data.idx_val, data.idx_test
-    # gat = GSAGE(nfeat=features.shape[1],
-    #       nhid=8, heads=8,
-    #       nclass=labels.max().item() + 1,
-    #       dropout=0.5, device='cpu')
-    # gat = gat.to('cpu')
-    # pyg_data = Dpr2Pyg(data)
-    # gat.fit(pyg_data, verbose=True) # train with earlystopping
-    # gat.test()
+#     from deeprobust.graph.data import Dataset, Dpr2Pyg
+#     # from deeprobust.graph.defense import GAT
+#     data = Dataset(root='/tmp/', name='cora')
+#     adj, features, labels = data.adj, data.features, data.labels
+#     idx_train, idx_val, idx_test = data.idx_train, data.idx_val, data.idx_test
+
+# #     surrogate_sage = GSAGE(nfeat=features.shape[1], nhid=64, nclass=labels.max().item()+1, dropout=0, with_bias=True, device=device).to(device)
+# # surrogate_sage.fit(data, patience=100, verbose=True)
+#     sage = GSAGE(nfeat=features.shape[1],
+#           nhid=64,
+#           nclass=labels.max().item() + 1,
+#           dropout=0, with_bias=True, device='cuda')
+#     sage = sage.to('cuda')
+#     # pyg_data = Dpr2Pyg(data)
+#     sage.fit(data, patience=100, verbose=True) # train with earlystopping
+#     print(sage.test())
     # print(gat.predict())
