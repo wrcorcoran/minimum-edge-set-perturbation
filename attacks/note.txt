@@ -1,0 +1,6 @@
+In order for these notebooks to work, you'll need to edit this file:
+
+/path/to/anaconda3/envs/mesp/lib/python3.8/site-packages/deeprobust/graph/global_attack/mettack.py
+
+At line 344, insert:
+torch.cuda.empty_cache()
