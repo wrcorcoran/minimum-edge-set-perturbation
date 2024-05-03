@@ -212,17 +212,17 @@ def test_model(model, d, GCNtype, testMask=False):
         accs = []
         for _, mask in d('test_mask'):
             accs.append(correct[mask].sum().item() / mask.sum().item())
-        return accs[0]
+        return accs[0], pred
     else:
         out = model(d)
     pred = out.argmax(dim=1)
 
     if (testMask):
         acc = (pred[d.test_mask] == d.y[d.test_mask]).sum().item() / d.test_mask.sum().item()
-        return acc
+        return acc, pred
     else:
         acc = (pred == d.y).sum().item() / len(d.y)
-        return acc
+        return acc, pred
 
 def output_accuracy_change(gt, cv):
     print("\n----")
