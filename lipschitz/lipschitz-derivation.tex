@@ -1,0 +1,57 @@
+\documentclass[10pt]{article}         %% What type of document you're writing.
+\usepackage{amsmath,amsfonts,amssymb}   %% AMS mathematics macros
+
+%% Title Information.
+
+\title{Lipschitz Derivation for GCN}
+\author{Will Corcoran}
+%% \date{2 July 2004}           %% By default, LaTeX uses the current date
+
+%%%%% The Document
+
+\begin{document}
+
+\maketitle
+
+\section{Converting To Simplified Form}
+First, our goal is to get to the Lipschitz constant form:
+$$
+\frac{||X^{(L)} - X^{(L)}_p||_2}{||\Delta - \Delta_p||_2} \leq L_2
+$$
+where $L_2$ is the Lipschitz constant. 
+\\\\
+From \textit{An Optimization Based Framework...} we are given:
+$$
+||X^{(L)} - X^{(L)}_p||_F \leq \sqrt{d} L ||\Delta - \Delta_p||_2 \prod_{l=1}^{L} ||\theta^{(l)}||_2
+$$
+Here are the following definitions:
+\\$\Delta = $ the normalized adjacency matrix
+\\$X^{(l)} = $ the embeddings at the $l$th layer
+\\$d = $ dimensionality of input graph
+\\$L = $ the number of layers in the GCN model
+\\$p$ indicates \textit{perturbation}
+\\\\
+We know for a general matrix $PQ$:
+$$
+||PQ||_F \leq ||P||_F ||Q||_2
+$$
+We can use this to our advantage by doing:
+$$
+||I_d (X^{(L)} - X^{(L)}_p)||_F \leq ||I_d||_F ||X^{(L)} - X^{(L)}_p||_2
+$$
+We know that $||I_d||_F = \sqrt{d}$.
+\\\\
+Therefore, we can rewrite this as (\emph{Note: I'm a little shaky about this subsitution because of the} $\leq$):
+$$
+\sqrt{d}||X^{(L)} - X^{(L)}_p||_2 \leq \sqrt{d} L ||\Delta - \Delta_p||_2 \prod_{l=1}^{L} ||\theta^{(l)}||_2
+$$
+We can simplify to get:
+$$
+\frac{||X^{(L)} - X^{(L)}_p||_2}{||\Delta - \Delta_p||_2} \leq L \prod_{l=1}^{L} ||\theta^{(l)}||_2
+$$
+This was the initial form that we wanted. 
+Therefore, we know that
+$$
+L_2 = L \prod_{l=1}^{L} ||\theta^{(l)}||_2
+$$
+\end{document}
