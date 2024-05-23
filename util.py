@@ -14,7 +14,7 @@ These include:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.datasets import Planetoid
+from torch_geometric.datasets import Planetoid, CitationFull
 from torch_geometric.nn import GCNConv, GATConv, GraphConv
 from torch_geometric.utils import to_networkx, from_networkx
 from deeprobust.graph.defense import GCNJaccard
@@ -51,8 +51,27 @@ class Dataset:
         self.reset_dataset()
 
     def reset_dataset(self):
-        cora_dataset = Planetoid(root=self.root, name=self.name)
-        self.data = cora_dataset[0]
+        if (self.name == "Cora_ML"):
+            cora_dataset = CitationFull(root='/tmp/CoraML', name='Cora_ML')
+            self.data = cora_dataset[0]
+    
+            num_nodes = self.data.num_nodes
+            train_mask = torch.zeros(num_nodes, dtype=torch.bool)
+            test_mask = torch.zeros(num_nodes, dtype=torch.bool)
+            
+            # Assign masks (this is just an example of random splitting)
+            indices = torch.randperm(num_nodes)
+            train_indices = indices[:int(0.2 * num_nodes)]
+            test_indices = indices[int(0.8 * num_nodes):]
+            
+            train_mask[train_indices] = True
+            test_mask[test_indices] = True
+            
+            self.data.train_mask = train_mask
+            self.data.test_mask = test_mask
+        else:
+            cora_dataset = Planetoid(root=self.root, name=self.name)
+            self.data = cora_dataset[0]
         self.data = self.data.to(self.device)
 
         self.in_feats = self.data.x.shape[1]
@@ -317,7 +336,7 @@ def get_node_homophily(G, n, y, c):
         if y[edge[1]].item() == c:
             val += 1
             
-    return val / len(edges)
+    return 1 if len(edges) == 0 else val / len(edges)
 
 def get_node_homophily_across_classes(G, n, y, num_classes):
     edges = G.out_edges(n)
