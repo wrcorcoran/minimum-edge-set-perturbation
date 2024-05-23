@@ -1,0 +1,50 @@
+% how to convert to pdf:
+% brew install imagemagick
+% convert -density 300 {name}.pdf -transparent white {name}.png
+
+\documentclass{article}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+\usepackage{pagecolor}
+
+% Set text color to 163e64
+\definecolor{customcolor}{HTML}{ffffff}
+\definecolor{bgcolor}{HTML}{163e64}
+
+% Set background to transparent (white in PDF viewers)
+\pagecolor{gray}
+\pagecolor{bgcolor}
+
+\begin{document}
+\color{customcolor}
+
+\noindent\textbf{HomophilyPtb}
+\begin{algorithmic}
+% get subgraphs
+\State $valEdges \gets []$
+\State $d \gets $ value $\in [0\ldots1]$
+\State $ptbRate \gets $ value $\geq 0$
+\State $budget \gets ptbRate \times |G.edges|$
+\\
+\State $C_1, \ldots, C_n \gets $nodes with class ${1, \ldots, n}$
+\For {$C_i \in {C_1,\ldots, n}$}:
+\State $G_i \gets \texttt{IndSubg}(C_i)$
+% get connected components
+\For {$cc \in \texttt{ConComp}(G_i)$}:
+\If {$\texttt{density}(cc) \geq d$}
+\State $Clique \gets \texttt{MakeClique}(cc)$
+\State $\texttt{append}(Clique.edges, valEdges)$
+\EndIf
+\EndFor
+\EndFor
+\\
+\While {under budget}
+    \State $edge \gets \texttt{randSel}(valEdges)$
+    \If {$edge \notin G}$
+        \State $addEdge(G, edge)$
+    \EndIf
+\EndWhile
+
+\end{algorithmic}
+
+\end{document}

@@ -1,0 +1,31 @@
+% how to convert to pdf:
+% brew install imagemagick
+% convert -density 300 {name}.pdf -transparent white {name}.png
+
+\documentclass{article}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+\usepackage{pagecolor}
+
+% Set text color to 163e64
+\definecolor{customcolor}{HTML}{ffffff}
+\definecolor{bgcolor}{HTML}{163e64}
+
+% Set background to transparent (white in PDF viewers)
+\pagecolor{gray}
+\pagecolor{bgcolor}
+
+\begin{document}
+\color{customcolor}
+
+\noindent\textbf{ClassHeuristic(i, j)}
+\begin{algorithmic}
+\State {\Return $label[i] == label[j]$ and $pred[i] == pred[j]$\\\qquad\qquad and $label[i] == pred[i]$}
+\end{algorithmic}
+
+\noindent\textbf{ClassGreedyPtb}
+\begin{algorithmic}
+\\$\texttt{GeneralGreedyPtb(ClassHeuristic)}$
+\end{algorithmic}
+
+\end{document}
