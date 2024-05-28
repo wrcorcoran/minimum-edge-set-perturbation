@@ -208,18 +208,20 @@ def test_model(model, d, GCNtype, testMask=False):
     if (GCNtype == Models.GCNJACCARD):
         out = model.test(d)
         return out
-    elif (GCNtype == Models.GSAGE):
+    elif GCNtype == Models.GSAGE:
         data = d.to(device, 'x', 'edge_index')
         
         model.eval()
         out = model(data.x, data.edge_index).cpu()
         
         clf = LogisticRegression()
-        clf.fit(out[data.train_mask].cpu(), data.y[data.train_mask].cpu())
-    
-        test_acc = clf.score(out[data.test_mask].cpu(), data.y[data.test_mask].cpu())
-
-        return test_acc
+        clf.fit(out[data.train_mask.cpu()].cpu(), data.y[data.train_mask.cpu()].cpu())
+        
+        predictions = clf.predict(out.cpu())
+        correct = torch.tensor(predictions == data.y.cpu().numpy())
+        accuracy = correct.sum().item() / len(data.y)
+        
+        return accuracy, predictions
     elif (GCNtype == Models.GSAINT):
         model.eval()
         model.set_aggr('mean')
@@ -227,11 +229,15 @@ def test_model(model, d, GCNtype, testMask=False):
         out = model(d.x.to(device), d.edge_index.to(device))
         pred = out.argmax(dim=-1)
         correct = pred.eq(d.y.to(device))
+
+        accuracy = correct.sum().item() / len(d.y)
+
+        return accuracy, pred
     
-        accs = []
-        for _, mask in d('test_mask'):
-            accs.append(correct[mask].sum().item() / mask.sum().item())
-        return accs[0], pred
+        # accs = []
+        # for _, mask in d('test_mask'):
+        #     accs.append(correct[mask].sum().item() / mask.sum().item())
+        # return accs[0], pred
     else:
         out = model(d)
     pred = out.argmax(dim=1)
