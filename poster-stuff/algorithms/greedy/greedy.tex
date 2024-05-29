@@ -8,8 +8,8 @@
 \usepackage{pagecolor}
 
 % Set text color to 163e64
-\definecolor{customcolor}{HTML}{ffffff}
-\definecolor{bgcolor}{HTML}{163e64}
+\definecolor{customcolor}{HTML}{163e64}
+\definecolor{bgcolor}{HTML}{c2dae6}
 
 % Set background to transparent (white in PDF viewers)
 \pagecolor{gray}
@@ -18,7 +18,7 @@
 \begin{document}
 \color{customcolor}
 
-\noindent\textbf{GeneralGreedyPtb}
+\noindent\textbf{GeneralGreedyPtb(heuristic)}
 \begin{algorithmic}
 % get subgraphs
 \State $valEdges \gets []$
@@ -27,8 +27,8 @@
 \\
 \For {$u \in G.nodes$}
 \For {$v \in G.nodes$}
-\If {$u \neq v$ and $\texttt{trueHeuristic}(u, v)$}
-    \State $append(\{u, v\}, valEdges)$
+\If {$u \neq v$ and $\texttt{heuristic}(u, v)$}
+    \State $\texttt{append}(\{u, v\}, valEdges)$
 \EndIf
 \EndFor
 \EndFor
@@ -36,9 +36,9 @@
 \While {under budget}
     \State $edge \gets \texttt{randSel}(valEdges)$
     \If {$edge \notin G}$
-        \State $addEdge(G, edge)$
+        \State $\texttt{addEdge}(G, edge)$
         \If {accuracy changes}
-            \State $removeEdge(G, edge)$
+            \State $\texttt{removeEdge}(G, edge)$
         \EndIf
     \EndIf
 \EndWhile
