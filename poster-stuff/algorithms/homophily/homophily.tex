@@ -8,8 +8,8 @@
 \usepackage{pagecolor}
 
 % Set text color to 163e64
-\definecolor{customcolor}{HTML}{ffffff}
-\definecolor{bgcolor}{HTML}{163e64}
+\definecolor{customcolor}{HTML}{163e64}
+\definecolor{bgcolor}{HTML}{c2dae6}
 
 % Set background to transparent (white in PDF viewers)
 \pagecolor{gray}
@@ -18,7 +18,7 @@
 \begin{document}
 \color{customcolor}
 
-\noindent\textbf{HomophilyPtb}
+\noindent\textbf{ClassDensityPtb():}
 \begin{algorithmic}
 % get subgraphs
 \State $valEdges \gets []$
@@ -27,7 +27,7 @@
 \State $budget \gets ptbRate \times |G.edges|$
 \\
 \State $C_1, \ldots, C_n \gets $nodes with class ${1, \ldots, n}$
-\For {$C_i \in {C_1,\ldots, n}$}:
+\For {$C_i \in {C_1,\ldots, C_n}$}:
 \State $G_i \gets \texttt{IndSubg}(C_i)$
 % get connected components
 \For {$cc \in \texttt{ConComp}(G_i)$}:
@@ -41,7 +41,7 @@
 \While {under budget}
     \State $edge \gets \texttt{randSel}(valEdges)$
     \If {$edge \notin G}$
-        \State $addEdge(G, edge)$
+        \State $\texttt{addEdge}(G, edge)$
     \EndIf
 \EndWhile
 
