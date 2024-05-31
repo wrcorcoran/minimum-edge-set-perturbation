@@ -1,0 +1,26 @@
+% how to convert to pdf:
+% brew install imagemagick
+% convert -density 300 {name}.pdf -transparent white {name}.png
+
+\documentclass{article}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+\usepackage{pagecolor}
+
+% Set text color to 163e64
+\definecolor{customcolor}{HTML}{163e64}
+\definecolor{bgcolor}{HTML}{c2dae6}
+
+% Set background to transparent (white in PDF viewers)
+\pagecolor{gray}
+\pagecolor{bgcolor}
+
+\begin{document}
+\color{customcolor}
+
+\noindent\textbf{MettackPtb():}
+\begin{algorithmic}
+\State {\Return $newEdges = mettackEdges - coraEdges$}
+\end{algorithmic}
+
+\end{document}
